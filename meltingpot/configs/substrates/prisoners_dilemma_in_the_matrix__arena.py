@@ -543,7 +543,7 @@ def build(
       levelDirectory="meltingpot/lua/levels",
       numPlayers=num_players,
       # Define upper bound of episode length since episodes end stochastically.
-      maxEpisodeLengthFrames=5000,
+      maxEpisodeLengthFrames=1024,
       spriteSize=8,
       topology="BOUNDED",  # Choose from ["BOUNDED", "TORUS"],
       simulation={

@@ -2,6 +2,9 @@ from meltingpot import substrate
 from ray.rllib.policy import policy
 from baselines.train import make_envs
 
+from gymnasium.spaces import Box
+import numpy as np
+
 SUPPORTED_SCENARIOS = [
     'allelopathic_harvest__open_0',
     'allelopathic_harvest__open_1',
@@ -63,9 +66,9 @@ def get_experiment_config(args, default_config):
 
         # training
         "seed": args.seed,
-        "rollout_fragment_length": 10,
-        "train_batch_size": 400,
-        "sgd_minibatch_size": 32,
+        "rollout_fragment_length": 512,
+        "train_batch_size": 102400,
+        "sgd_minibatch_size": 1024,
         "disable_observation_precprocessing": True,
         "use_new_rl_modules": False,
         "use_new_learner_api": False,
@@ -77,7 +80,7 @@ def get_experiment_config(args, default_config):
         "cnn_activation": "relu",
         "fcnet_activation": "relu",
         "post_fcnet_activation": "relu",
-        "use_lstm": True,
+        "use_lstm": False,
         "lstm_use_prev_action": True,
         "lstm_use_prev_reward": False,
         "lstm_cell_size": 2,
@@ -87,8 +90,9 @@ def get_experiment_config(args, default_config):
         "exp_name": args.exp,
         "stopping": {
                     #"timesteps_total": 1000000,
-                    "training_iteration": 1,
+                    #"training_iteration": 1,
                     #"episode_reward_mean": 100,
+                    "training_iteration": 100000,
         },
         "num_checkpoints": 5,
         "checkpoint_interval": 10,
@@ -130,13 +134,18 @@ def get_experiment_config(args, default_config):
     base_env = make_envs.env_creator(run_configs.env_config)
     policies = {}
     player_to_agent = {}
+
+    extra_obs = Box(low=0, high=1, shape=(11, 11, 6), dtype=np.uint8)
+
     for i in range(len(player_roles)):
-        rgb_shape = base_env.observation_space[f"player_{i}"]["RGB"].shape
+        obs_space = base_env.observation_space[f"player_{i}"]
+        obs_space["extra_viz"] = extra_obs
+        rgb_shape = obs_space["RGB"].shape
         sprite_x = rgb_shape[0]
         sprite_y = rgb_shape[1]
 
         policies[f"agent_{i}"] = policy.PolicySpec(
-            observation_space=base_env.observation_space[f"player_{i}"],
+            observation_space=obs_space,
             action_space=base_env.action_space[f"player_{i}"],
             config={
                 "model": {

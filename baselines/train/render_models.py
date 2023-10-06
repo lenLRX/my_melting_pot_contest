@@ -7,6 +7,7 @@ from dmlab2d.ui_renderer import pygame
 import numpy as np
 from ray.tune.registry import register_env
 import make_envs
+import time
 
 
 def render_model(args):
@@ -31,7 +32,7 @@ def render_model(args):
 
   # Configure the pygame display
   scale = 4
-  fps = 5
+  fps = 2
 
   pygame.init()
   clock = pygame.time.Clock()
@@ -40,6 +41,8 @@ def render_model(args):
   shape = obs_spec[0]["WORLD.RGB"].shape
   game_display = pygame.display.set_mode(
       (int(shape[1] * scale), int(shape[0] * scale)))
+
+  color_dict = {}
 
   for k in range(args.horizon):
     obs = timestep.observation[0]["WORLD.RGB"]
@@ -59,11 +62,21 @@ def render_model(args):
           reward=timestep.reward[i],
           discount=timestep.discount,
           observation=timestep.observation[i])
+      vis = timestep.observation[i]["RGB"].reshape(-1, 3)
+      sz = vis.shape[0]
+      for si in range(sz):
+          t = tuple(vis[si].tolist())
+          if t != (0, 0, 0):
+              color_dict[t] = color_dict.get(t, 0) + 1
+
+      if (timestep.reward[i]) > 0:
+          print(f"bot {i} reward {timestep.reward[i]}")
 
       actions[i], states[i] = bot.step(timestep_bot, states[i])
 
     timestep = env.step(actions)
     ray.shutdown()
+  print(color_dict)
 
 
 if __name__ == "__main__":
@@ -85,7 +98,7 @@ if __name__ == "__main__":
   parser.add_argument(
       "--horizon",
       type=int,
-      default=200,
+      default=1000,
       help="No. of environment timesteps to render models",
   )
 

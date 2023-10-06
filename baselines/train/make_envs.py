@@ -8,6 +8,7 @@ def env_creator(env_config):
   
   env_config = config_dict.ConfigDict(env_config)
   env = substrate.build(env_config['substrate'], roles=env_config['roles'])
+  #env["maxEpisodeLengthFrames"] = 1024
   env = DownSamplingSubstrateWrapper(env, env_config['scaled'])
   env = MeltingPotEnv(env)
   return env
