@@ -135,11 +135,9 @@ def get_experiment_config(args, default_config):
     policies = {}
     player_to_agent = {}
 
-    extra_obs = Box(low=0, high=1, shape=(11, 11, 6), dtype=np.uint8)
 
     for i in range(len(player_roles)):
         obs_space = base_env.observation_space[f"player_{i}"]
-        obs_space["extra_viz"] = extra_obs
         rgb_shape = obs_space["RGB"].shape
         sprite_x = rgb_shape[0]
         sprite_y = rgb_shape[1]
